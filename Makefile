@@ -7,10 +7,20 @@ DOCDIR=./doc
 .SUFFIXES: .java .class
 
 ${BINDIR}/%.class: ${SRCDIR}/%.java
-	javac $< -cp ${BINDIR} -d ${BINDIR} 
+	javac -g $< -cp ${BINDIR} -d ${BINDIR} 
 
-# first build rule
-${BINDIR}/C.class:${BINDIR}/Score.class ${BINDIR}/WordDictionary.class ${BINDIR}/WordRecord.class ${BINDIR}/WordPanel.class ${BINDIR}/WordApp.class 
+CLASSES = \
+	${BINDIR}/Score.class \
+	${BINDIR}/WordDictionary.class \
+	${BINDIR}/WordRecord.class \
+	${BINDIR}/WordThread.class \
+	${BINDIR}/Controller.class \
+	${BINDIR}/WordPanel.class \
+	${BINDIR}/WordApp.class \
+	
+default: classes
+
+classes: $(CLASSES:${SRCDIR}/%.java=${BINDIR}/%.class)
 
 run:
 	cd bin && java WordApp "5" "3" "" && cd ..

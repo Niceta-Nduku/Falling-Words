@@ -4,23 +4,26 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.*;
 
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
 public class WordPanel extends JPanel implements Runnable {
-		public static volatile boolean done;
+
 		public static volatile boolean paused;
-		private WordRecord[] words;
+		private WordRecord[] words;//shared
 		private int noWords;
 		private int maxY;
+		private Controller c;
 	
-		WordPanel(WordRecord[] words, int maxY) {
-			this.words=words; //will this work?
+		WordPanel(WordRecord[] words, int maxY, Controller c) {
+			this.words=words; //will this work? lol no
 			noWords = words.length;
-			done =false; // game is over
 			paused = false; // game has been paused
-			this.maxY=maxY;		
+			this.maxY=maxY;	
+			this.c = c;	
+
 		}
 
 		public void paintComponent(Graphics g) {
@@ -32,43 +35,25 @@ public class WordPanel extends JPanel implements Runnable {
 
 		    g.setColor(Color.black);
 		    g.setFont(new Font("Helvetica", Font.PLAIN, 26));
-		   //draw the words
-		   //animation must be added 
+	  
+			for (int i=0;i<noWords;i++){//for each word	    	
 
-		    if(done == false){
-				for (int i=0;i<noWords;i++){//for each word	    	
-				    	//g.drawString(words[i].getWord(),words[i].getX(),words[i].getY());
-				    	
-			    	if (words[i].getY()>=maxY){
-			    		words[i].resetWord();
-			    		g.drawString(words[i].getWord(),words[i].getX(),words[i].getY());
-			    	}
-			    	else
-			    	  g.drawString(words[i].getWord(),words[i].getX(),words[i].getY());
-				}
+				g.drawString(words[i].getWord(),words[i].getX(),words[i].getY());
 			}
-
-			else
-				g.drawString("Click Start",width/2-50,height/2);
-
-			run();
-
+			
 		}
    
 		
 		public void run() {
-			//add in code to animate this
-			if(paused==false)
-				for (WordRecord word: words){
-					if(! word.dropped())
-						word.drop(word.getSpeed());
-			};
-	
-			this.revalidate();
-			this.repaint();
-
+			while (!c.gameEnded())//if the game is not over				
+				if(paused)
+					continue;// if the game was paused, do nothing
+				else if(c.isChanged()){ //there is a change to the game
+					repaint();//refreshh the panel
+					c.resetState();//let the contoller know the change has been made
+				}				
 			try{
-				Thread.sleep(200);
+				Thread.sleep(100);
 			}
 			catch(InterruptedException e){
 				System.out.println ( "Exception: " + e.getMessage() );
