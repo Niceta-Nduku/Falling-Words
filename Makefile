@@ -13,7 +13,7 @@ ${BINDIR}/%.class: ${SRCDIR}/%.java
 ${BINDIR}/C.class:${BINDIR}/Score.class ${BINDIR}/WordDictionary.class ${BINDIR}/WordRecord.class ${BINDIR}/WordPanel.class ${BINDIR}/WordApp.class 
 
 run:
-	cd bin & java ${BINDIR}/WordApp.class "5" "3" & cd ..
+	cd bin && java WordApp "5" "3" "" && cd ..
 
 clean:
 	rm -f ${BINDIR}/*.class

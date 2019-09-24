@@ -6,7 +6,7 @@ import java.awt.event.ActionListener;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-
+import java.util.Arrays;
 import java.util.Scanner;
 import java.util.concurrent.*;
 //model is separate from the view.
@@ -60,12 +60,21 @@ public class WordApp {
 	    final JTextField textEntry = new JTextField("",20);
 	   textEntry.addActionListener(new ActionListener()
 	    {
-	      public void actionPerformed(ActionEvent evt) {
-	          String text = textEntry.getText();
-	          //[snip]
-	          textEntry.setText("");
-	          textEntry.requestFocus();
-	      }
+			public void actionPerformed(ActionEvent evt) {
+				String text = textEntry.getText();
+
+				if(Arrays.asList(words).contains(text)){
+					score.caughtWord(text.length());
+					words[Arrays.asList(words).indexOf(text)].resetWord();
+				}
+				textEntry.setText("");
+				textEntry.requestFocus();
+
+				caught.setText("Caught: " + score.getCaught() + "    ");
+				missed.setText("Missed:" + score.getMissed()+ "    ");
+				scr.setText("Score:" + score.getScore()+ "    ");
+
+			}
 	    });
 	   
 	   txt.add(textEntry);
@@ -79,25 +88,63 @@ public class WordApp {
 			// add the listener to the jbutton to handle the "pressed" event
 			startB.addActionListener(new ActionListener()
 		    {
-		      public void actionPerformed(ActionEvent e)
-		      {
-		    	  //[snip]
-		    	  textEntry.requestFocus();  //return focus to the text entry field
+		    	public void actionPerformed(ActionEvent e)
+		      	{
+		    		
+		    		textEntry.requestFocus();//return focus to the text entry field
+
+		    		if (startB.getText().equals("Start")){
+		    			WordPanel.done = false;
+		    			startB.setText("restart");
+		    		}  
+		    	  		
+		    	  	else{
+
+		    	  		
+		    	  	}
 		      }
 		    });
+		JButton pauseB = new JButton("Pause");;
+			
+				// add the listener to the jbutton to handle the "pressed" event
+				pauseB.addActionListener(new ActionListener()
+			    {
+			      public void actionPerformed(ActionEvent e)
+			      {
+
+		    		if (pauseB.getText().equals("Pause")){
+		    			WordPanel.paused = true;
+		    			pauseB.setText("continue");
+		    		}  //return focus to the text entry field
+		    	  		
+		    	  	else {
+		    	  		WordPanel.paused = false;
+		    			pauseB.setText("Pause");
+		    	  	}
+
+			    	  
+			      }
+			    });
+
 		JButton endB = new JButton("End");;
 			
 				// add the listener to the jbutton to handle the "pressed" event
 				endB.addActionListener(new ActionListener()
 			    {
-			      public void actionPerformed(ActionEvent e)
-			      {
-			    	  //[snip]
-			      }
+					public void actionPerformed(ActionEvent e)
+					{
+						WordPanel.done = true;
+						if (startB.getText().equals("restart"))
+							startB.setText("Start");
+						score.resetScore();
+					}
+
 			    });
 		
 		b.add(startB);
+		b.add(pauseB);
 		b.add(endB);
+		
 		
 		g.add(b);
     	
@@ -111,7 +158,7 @@ public class WordApp {
 	}
 
 	
-public static String[] getDictFromFile(String filename) {
+	public static String[] getDictFromFile(String filename) {
 		String [] dictStr = null;
 		try {
 			Scanner dictReader = new Scanner(new FileInputStream(filename));
@@ -138,6 +185,7 @@ public static String[] getDictFromFile(String filename) {
 		noWords=Integer.parseInt(args[1]); // total words falling at any point
 		assert(totalWords>=noWords); // this could be done more neatly
 		String[] tmpDict=getDictFromFile(args[2]); //file of words
+
 		if (tmpDict!=null)
 			dict= new WordDictionary(tmpDict);
 		
