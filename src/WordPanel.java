@@ -4,7 +4,6 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.*;
 
 import javax.swing.JButton;
 import javax.swing.JPanel;
@@ -36,16 +35,20 @@ public class WordPanel extends JPanel implements Runnable {
 		    g.setColor(Color.black);
 		    g.setFont(new Font("Helvetica", Font.PLAIN, 26));
 	  
-			for (int i=0;i<noWords;i++){//for each word	    	
+	  		if(!c.gameEnded()){
+				for (int i=0;i<noWords;i++){//for each word	    	
 
-				g.drawString(words[i].getWord(),words[i].getX(),words[i].getY());
+					g.drawString(words[i].getWord(),words[i].getX(),words[i].getY());
+				}
 			}
+			else
+				g.drawString("Click Start",400,height/2);
 			
 		}
    
 		
 		public void run() {
-			while (!c.gameEnded())//if the game is not over				
+			while (c.gameRunning())//if the game is not over				
 				if(paused)
 					continue;// if the game was paused, do nothing
 				else if(c.isChanged()){ //there is a change to the game
@@ -58,6 +61,10 @@ public class WordPanel extends JPanel implements Runnable {
 			catch(InterruptedException e){
 				System.out.println ( "Exception: " + e.getMessage() );
 			}
+		}
+
+		public void reset(){
+			repaint();
 		}
 	}
 

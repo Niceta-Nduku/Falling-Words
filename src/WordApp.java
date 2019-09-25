@@ -23,7 +23,7 @@ public class WordApp {
 	static WordDictionary dict = new WordDictionary(); //use default dictionary, to read from file eventually
 
 	static WordRecord[] words;// words that will be on the screen
-
+	static JLabel[] scoresTable;
 
 	static Score score = new Score();
 	static Controller controller;
@@ -40,7 +40,7 @@ public class WordApp {
       	g.setSize(frameX,frameY);
  
     	
-		w = new WordPanel(words,yLimit);
+		w = new WordPanel(words,yLimit,controller);
 		w.setSize(frameX,yLimit+100);
 	    g.add(w);
 	    
@@ -50,9 +50,14 @@ public class WordApp {
 	    JLabel caught =new JLabel("Caught: " + score.getCaught() + "    ");
 	    JLabel missed =new JLabel("Missed:" + score.getMissed()+ "    ");
 	    JLabel scr =new JLabel("Score:" + score.getScore()+ "    ");    
+
+	    scoresTable = new JLabel[]{caught,missed,scr};
+	    controller.scoresTable = scoresTable;
+
 	    txt.add(caught);
 	    txt.add(missed);
 	    txt.add(scr);
+
     
 	 
 		final JTextField textEntry = new JTextField("",20);
@@ -60,11 +65,7 @@ public class WordApp {
 	    {
 			public void actionPerformed(ActionEvent evt) {
 				String text = textEntry.getText();
-				controller.checkAnswer(text);
-
-				caught =("Caught: " + score.getCaught() + "    ");
-				missed.setText("Missed:" + score.getMissed()+ "    ");
-				scr.setText("Score:" + score.getScore()+ "    ");
+				controller.checkAnswer(text);			
 
 				textEntry.setText("");
 				textEntry.requestFocus();
@@ -90,10 +91,11 @@ public class WordApp {
 		    			startB.setText("Start");
 		    		} 
 		    		else{
+
 		    			controller.runGame();
 		    	  		startB.setText("restart");
 		    	  	}
-
+		    	  	new Thread(w).start();
 		    		textEntry.requestFocus();//return focus to the text entry field
 		      }
 		    });
@@ -127,7 +129,7 @@ public class WordApp {
 				public void actionPerformed(ActionEvent e)
 				{
 					controller.endGame();
-					controller.resetGame();
+										
 					if (startB.getText().equals("restart"))
 						startB.setText("Start");
 					
@@ -204,11 +206,15 @@ public class WordApp {
 
 		for (int i=0;i<noWords;i++) {
 			words[i]=new WordRecord(dict.getNewWord(),i*x_inc,yLimit);
-		}
+		}		
+		
+		controller = new Controller(noWords, totalWords, words,score);
 
-		controller = new Controller();
 
 		setupGUI(frameX, frameY, yLimit); 
+
+
+
 	}
 
 }

@@ -7,13 +7,12 @@ DOCDIR=./doc
 .SUFFIXES: .java .class
 
 ${BINDIR}/%.class: ${SRCDIR}/%.java
-	javac -g $< -cp ${BINDIR} -d ${BINDIR} 
+	javac $< -cp ${BINDIR} -d ${BINDIR} 
 
 CLASSES = \
 	${BINDIR}/Score.class \
 	${BINDIR}/WordDictionary.class \
 	${BINDIR}/WordRecord.class \
-	${BINDIR}/WordThread.class \
 	${BINDIR}/Controller.class \
 	${BINDIR}/WordPanel.class \
 	${BINDIR}/WordApp.class \
