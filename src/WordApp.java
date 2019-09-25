@@ -86,12 +86,14 @@ public class WordApp {
 		    	public void actionPerformed(ActionEvent e)
 		      	{
 
-		    		if (startB.getText().equals("restart")){
+		    		if (startB.getText().equals("restart")&& controller.gameEnded()){
 		    			controller.resetGame();
 		    			startB.setText("Start");
 		    		} 
+		    		else if(startB.getText().equals("restart")&& controller.gameRunning()){
+		    			controller.resetGame();
+		    		} 
 		    		else{
-
 		    			controller.runGame();
 		    	  		startB.setText("restart");
 		    	  	}

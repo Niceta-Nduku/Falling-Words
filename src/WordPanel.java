@@ -35,26 +35,29 @@ public class WordPanel extends JPanel implements Runnable {
 		    g.setColor(Color.black);
 		    g.setFont(new Font("Helvetica", Font.PLAIN, 26));
 	  
-	  		if(!c.gameEnded()){
+	  		if(c.gameRunning()){
 				for (int i=0;i<noWords;i++){//for each word	    	
 
 					g.drawString(words[i].getWord(),words[i].getX(),words[i].getY());
 				}
 			}
-			else
+			else {
 				g.drawString("Click Start",400,height/2);
+				g.drawString(c.getScores(),250,400);
+			}
 			
 		}
    
 		
 		public void run() {
-			while (c.gameRunning())//if the game is not over				
+			while (!c.gameEnded()){//if the game is not over				
 				if(paused)
 					continue;// if the game was paused, do nothing
 				else if(c.isChanged()){ //there is a change to the game
 					repaint();//refreshh the panel
 					c.resetState();//let the contoller know the change has been made
-				}				
+				}	
+			}			
 			try{
 				Thread.sleep(100);
 			}

@@ -131,7 +131,7 @@ public class Controller {
 		}
 
 		score.resetScore();
-		updateScores();
+		newScore = true;
 		modified = true;
 	}
 
@@ -153,6 +153,13 @@ public class Controller {
 	public void resetGame(){
 		this.endGame();
 		this.runGame();
+	}
+
+	public String getScores(){
+
+		return ""+scoresTable[0].getText()+ " "+
+		scoresTable[1].getText()+" "+
+		scoresTable[2].getText();
 	}
 
 	class WordThread implements Runnable{
@@ -184,7 +191,7 @@ public class Controller {
 						c.resetState();//let the contoller know there is a modification
 					}			
 				try{
-					Thread.sleep(word.getSpeed()/10);//it will drop the word at the rate 
+					Thread.sleep(word.getSpeed()/20);//it will drop the word at the rate 
 				}
 				catch(InterruptedException e){
 					System.out.println ( "Exception: " + e.getMessage() );
