@@ -44,6 +44,7 @@ public class WordPanel extends JPanel implements Runnable {
 			}
 			else {
 				g.drawString("Click Start",400,height/2);
+				g.drawString(c.getOutcome(),365,320);
 				g.drawString(c.getScores(),250,400);
 			}
 			

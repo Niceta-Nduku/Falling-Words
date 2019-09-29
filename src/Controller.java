@@ -20,10 +20,11 @@ public class Controller {
 	static JLabel[] scoresTable;
 	private static Score score;
 
-	public AtomicInteger wordCount;
 	private AtomicInteger threadCount = new AtomicInteger(0);//to see how many words have dropped;
 
 	ReentrantLock lock = new ReentrantLock();
+
+	String outcome;
 
 	/**
 	* This is the constructor for the Controller class. 
@@ -38,8 +39,6 @@ public class Controller {
 		this.totalWords = totalWords;
 		this.words = words;
 		this.score = score;
-
-		wordCount = new AtomicInteger(totalWords-noWords);
 		
 		newScore = false;
 		fallingWords = new WordThread [noWords];
@@ -65,26 +64,37 @@ public class Controller {
 		}
 		
 	}
-	/*
-	uncomment the block below to see how many words are dropping
+
+	/**
+	* Increments for each word falling.
 	*/
 
 	public synchronized void countThreads(){
+		lock.lock();
+		try{
 			threadCount.incrementAndGet();
-			// System.out.print(": "+ threadCount);
-			// System.out.println(": "+ wordCount);
+		}
+		finally{
+			lock.unlock();
+		}
+		// System.out.print(": "+ threadCount); // can also be printed in the threads
 	}
 
 	/**
 	*  	Starts the game.
 	*/ 
 	public void runGame(){
+
+		threadCount.set(0);
+
+		score.resetScore();
+		newScore = true;
+		updateScores();
+
 		ended = false;
 		running = true;
-		wordCount.set(totalWords-noWords);
-		threadCount.set(0);
-		score.resetScore();
-		updateScores();
+		//System.out.println("RUNNING");
+
 		dropWords();
 		
 	}
@@ -137,15 +147,6 @@ public class Controller {
 				newScore = true;
 				updateScores();
 
-				lock.lock();
-				try{
-					wordCount.decrementAndGet();// to know how many words left in bank
-					
-				}
-				finally{
-					lock.unlock();
-				}
-				//System.out.println(wordCount.get()); //used to know what is in bank
 			}
 		} 
 	}
@@ -161,15 +162,6 @@ public class Controller {
 		updateScores();
 
 		modified = true;
-
-		lock.lock();
-		try{
-			wordCount.decrementAndGet();// to know how many words left in bank
-			
-		}
-		finally{
-			lock.unlock();
-		}
 	}
 
 	/**
@@ -202,13 +194,23 @@ public class Controller {
 	*	All running threads are terminated.
 	*/ 
 	public synchronized void endGame(){
-		//System.out.println("ENDED");
+		
 		ended = true;
 		newScore = true;
 		modified = true;
 		updateScores();
-		score.resetScore();
 		
+		if (score.getMissed() == 1)
+			outcome = "You were so close o_o";
+		else if (score.getMissed() == totalWords)
+			outcome = "Did you even try??";
+		else if(score.getCaught() == totalWords)
+			outcome = "You won!! :D";
+		else 
+			outcome = "Better next time :'( \n";
+
+		score.resetScore();
+		newScore = true;
 
 		if(fallingWords!=null)
 			for (WordThread w: fallingWords){
@@ -226,6 +228,7 @@ public class Controller {
 		
 		running = false;
 		paused = false;
+		//System.out.println("ENDED");
 	}
 
 	/**
@@ -281,14 +284,28 @@ public class Controller {
 	}
 
 	/**
+	*	This returns a string version of the scores
 	*  	@return String version of score table 
 	*/ 
 	public synchronized String getScores(){
 
-		return ""+scoresTable[0].getText()+ " "+
+		String s = ""+scoresTable[0].getText()+ " "+
 		scoresTable[1].getText()+" "+
 		scoresTable[2].getText();
+
+		return s;	
 	}
+
+	/**
+	*	This is a message to be displayed based on the users performance
+	* 	@return the outcome of the game. 
+	*/ 
+	public synchronized String getOutcome(){
+		if (outcome!=null)
+			return outcome;
+		return " ";	
+	}
+
 
 	/**
 	*  	This is the WordThread class
@@ -338,10 +355,10 @@ public class Controller {
 					if(c.gamePaused())
 						continue;// if the game was paused, do nothing
 					else if (word.caught()){							
-							//System.out.println("c:"+count);
+						//System.out.println(":"+count); //current count of threads
 
 						if (((totalWords) - count <= c.noWords)){//if the word count has been reached
-							//System.out.println("dc:"+count);
+							
 							destroyed = true;
 							this.reset();						
 							c.endThread(this);
@@ -354,9 +371,9 @@ public class Controller {
 
 					else if(word.dropped()){ //there is a change to the game
 						
-						//System.out.println("d:"+count);
+						//System.out.println(":"+count);
 						if (((totalWords) - count <= c.noWords)){
-							//System.out.println("dc:"+count);
+	
 							destroyed = true;
 							this.reset();
 							c.missed();						
