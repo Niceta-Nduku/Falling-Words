@@ -43,6 +43,8 @@ public class WordApp {
 		w = new WordPanel(words,yLimit,controller);
 		w.setSize(frameX,yLimit+100);
 	    g.add(w);
+
+	    Thread t = new Thread(w);
 	    
 	    
 	    JPanel txt = new JPanel();
@@ -57,7 +59,6 @@ public class WordApp {
 	    txt.add(caught);
 	    txt.add(missed);
 	    txt.add(scr);
-
     
 	 
 		final JTextField textEntry = new JTextField("",20);
@@ -80,28 +81,7 @@ public class WordApp {
 	    
 	    JPanel b = new JPanel();
         b.setLayout(new BoxLayout(b, BoxLayout.LINE_AXIS)); 
-	   	JButton startB = new JButton("Start");;
-		
-			// add the listener to the jbutton to handle the "pressed" event
-			startB.addActionListener(new ActionListener()
-		    {
-		    	public void actionPerformed(ActionEvent e)
-		      	{
 
-		    		if (startB.getText().equals("restart") && controller.gameEnded()){
-		    			controller.resetGame();
-		    		} 
-		    		else if(startB.getText().equals("restart")&& controller.gameRunning()){
-		    			controller.resetGame();
-		    		} 
-		    		else{
-		    			controller.runGame();
-		    	  		startB.setText("restart");
-		    	  	}
-		    	  	new Thread(w).start();
-		    		textEntry.requestFocus();//return focus to the text entry field
-		      }
-		    });
 
 		JButton pauseB = new JButton("Pause");;
 			
@@ -123,6 +103,34 @@ public class WordApp {
 	    	  	}		    	  
 		      }
 		    });
+		    
+	   	JButton startB = new JButton("Start");;
+		
+			// add the listener to the jbutton to handle the "pressed" event
+			startB.addActionListener(new ActionListener()
+		    {
+		    	public void actionPerformed(ActionEvent e)
+		      	{
+
+		      		if (pauseB.getText().equals("continue"))
+						pauseB.setText("Pause");
+
+		    		if (startB.getText().equals("restart") && controller.gameRunning()){
+		    			controller.resetGame();
+		    		} 
+		    		else if (startB.getText().equals("restart") && controller.gameEnded()){
+		    			controller.runGame();
+		    		}
+		    		else{
+		    			controller.runGame();
+		    	  		startB.setText("restart");
+		    	  		t.start();
+		    	  	}
+		    	  	
+		    		textEntry.requestFocus();//return focus to the text entry field
+		      }
+		    });
+
 
 		JButton endB = new JButton("End");;
 		
@@ -131,7 +139,12 @@ public class WordApp {
 		    {
 				public void actionPerformed(ActionEvent e)
 				{
+					if (pauseB.getText().equals("continue"))
+						pauseB.setText("Pause");
+
 					controller.endGame();
+
+
 													
 				}
 
@@ -143,6 +156,7 @@ public class WordApp {
 		    {
 				public void actionPerformed(ActionEvent e)
 				{
+
 					System.exit(0);
 				}
 

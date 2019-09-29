@@ -21,6 +21,7 @@ public class Controller {
 	private static Score score;
 
 	public AtomicInteger wordCount;
+	private AtomicInteger threadCount = new AtomicInteger(0);//to see how many words have dropped;
 
 	ReentrantLock lock = new ReentrantLock();
 
@@ -39,7 +40,7 @@ public class Controller {
 		this.score = score;
 
 		wordCount = new AtomicInteger(totalWords-noWords);
-		System.out.println(wordCount.toString());
+		
 		newScore = false;
 		fallingWords = new WordThread [noWords];
 
@@ -52,42 +53,58 @@ public class Controller {
 	*  	Creates and starts the threads of words 
 	*/ 
 
-	public void fallWords(){
+	public void dropWords(){
+		modified = true;
 		for (int i=0;i<noWords;i++){
 			fallingWords[i] = new WordThread(words[i],this);//create threads 
 		}
+
 		for (int i=0;i<noWords;i++){
+
 			new Thread (fallingWords[i]).start();
 		}
-
+		
 	}
+	/*
+	uncomment the block below to see how many words are dropping
+	*/
+
+	// public synchronized void countThreads(){
+	// 		threadCount.incrementAndGet();
+	// 		System.out.print(": "+ threadCount);
+	// 		System.out.println(": "+ wordCount);
+	// }
 
 	/**
-	*  	Creates and starts the threads of words 
+	*  	Starts the game.
 	*/ 
 	public void runGame(){
 		ended = false;
 		running = true;
+		wordCount.set(totalWords-noWords);
+		threadCount.set(0);
 		updateScores();
-		fallWords();
+		dropWords();
+		
 	}
 
 	/**
-	*  	Creates and starts the threads of words 
+	*  	@return the running state of the game
 	*/ 
 	public boolean gameRunning(){
 		return running;
 	}
 
 	/**
-	*  	Creates and starts the threads of words 
+	*  	@return a boolean of the state of the scores. true if they are updated, false if not
 	*/ 
 	public synchronized boolean scoresUpdated(){
 		return newScore;
 	}
 
 	/**
-	*  	Creates and starts the threads of words 
+	*  	This updates the score label. 
+	*	Used a lock to ensure thread safety 
 	*/ 
 	public void updateScores(){
 		lock.lock();
@@ -108,7 +125,8 @@ public class Controller {
 	}
 
 	/**
-	*  	Creates and starts the threads of words 
+	*  	Checks the user input and matches the text. 
+	*	Score will be updated.
 	*/ 
 	public synchronized void checkAnswer(String text){	
 		
@@ -117,35 +135,44 @@ public class Controller {
 				score.caughtWord(text.length());
 				newScore = true;
 				updateScores();
-				wordCount.decrementAndGet();
+
+				lock.lock();
+				try{
+					wordCount.decrementAndGet();// to know how many words left in bank
+					
+				}
+				finally{
+					lock.unlock();
+				}
 				//System.out.println(wordCount.get()); //used to know what is in bank
 			}
 		} 
-
-		if (score.getTotal()>=totalWords){
-			this.endGame();
-		}
 	}
 
 	/**
-	*  	Creates and starts the threads of words 
-	*/ 
+	*  	Increased the missed word count
+	*	Score will be updated.
+	*/
 	public synchronized void missed(){
 		score.missedWord();
 		newScore = true;
 		//put lock
 		updateScores();
 
-		modified = true;	
-		wordCount.decrementAndGet();// to know how many words left in bank
+		modified = true;
 
-		if (score.getTotal()>=totalWords){
-			this.endGame();
-		}	
+		lock.lock();
+		try{
+			wordCount.decrementAndGet();// to know how many words left in bank
+			
+		}
+		finally{
+			lock.unlock();
+		}
 	}
 
 	/**
-	*  	Creates and starts the threads of words 
+	*  	Pauses the game if the game is not over or already paused
 	*/ 
 	public void pauseGame(){
 		if(!ended && !paused )//if the game is already over it doen't matter
@@ -153,14 +180,15 @@ public class Controller {
 	}
 
 	/**
-	*  	Creates and starts the threads of words 
+	*	true if paused, false if not.
+	*  	@return the pause state
 	*/ 
 	public synchronized boolean gamePaused(){
 		return paused;
 	}
 
 	/**
-	*  	Creates and starts the threads of words 
+	*  	Continues the game if paused or not ended 
 	*/ 
 	public void continueGame(){
 		if(!ended && paused)// need to do this to ensure that pause if not set to true before restart
@@ -168,9 +196,12 @@ public class Controller {
 	}
 
 	/**
-	*  	Creates and starts the threads of words 
+	*  	Ends the game
+	*	The scores table is updated to reflct the final scores and the score is reset
+	*	All running threads are terminated.
 	*/ 
 	public synchronized void endGame(){
+		//System.out.println("ENDED");
 		ended = true;
 		newScore = true;
 		modified = true;
@@ -181,8 +212,11 @@ public class Controller {
 		if(fallingWords!=null)
 			for (WordThread w: fallingWords){
 				try{
-					w.terminate();
-					w.join();
+						w.reset();
+						if (w.isAlive()){
+							w.terminate();
+							w.join();
+						}										
 				}
 				catch(InterruptedException e){
 					System.out.println ( "Exception: " + e.getMessage() );
@@ -191,52 +225,54 @@ public class Controller {
 		
 		running = false;
 		paused = false;
-		wordCount.set(totalWords-noWords);
-
 	}
 
 	/**
-	*  	Creates and starts the threads of words 
+	*  	@return the end state 
 	*/ 
 	public synchronized boolean gameEnded(){
 		return ended;
 	}
 	
 	/**
-	*  	Creates and starts the threads of words 
+	*  	This sets the modified boolean according to the parameter
+	*	@param m the boolean to be set 
 	*/ 
-	public synchronized void resetState(){
-		if (!modified) // 
+	public synchronized void resetState(boolean m){
+		if (m) // 
 			modified = true;
 		else 
 			modified = false;
 	}
 
 	/**
-	*  	Creates and starts the threads of words 
+	*  	@return the modified state
 	*/ 
 	public synchronized boolean isChanged(){
 		return modified;
 	}
 
 	/**
-	*  	Creates and starts the threads of words 
+	*	This ends a thread 
+	*  	@param w the word Thread to be joined
 	*/ 
 	public synchronized void endThread(WordThread w){
+
 		try{
 			w.join();
 		}
 		catch(InterruptedException e){
 			System.out.println ( "Exception: " + e.getMessage() );
 		}
+		modified = true;
+
 		if (score.getTotal()>=totalWords){
 			this.endGame();
-		}	
-		modified = true;
+		}
 	}
 
 	/**
-	*  	Creates and starts the threads of words 
+	*  	Resets a game
 	*/ 
 	public void resetGame(){
 		this.endGame();
@@ -244,7 +280,7 @@ public class Controller {
 	}
 
 	/**
-	*  	Creates and starts the threads of words 
+	*  	@return String version of score table 
 	*/ 
 	public synchronized String getScores(){
 
@@ -254,7 +290,8 @@ public class Controller {
 	}
 
 	/**
-	*  	Creates and starts the threads of words 
+	*  	This is the WordThread class
+	*	@extends Thread
 	*/ 
 	class WordThread extends Thread{
 
@@ -262,8 +299,11 @@ public class Controller {
 		private Controller c;
 		private boolean destroyed = false;
 
+
 		/**
-		*  	Creates and starts the threads of words 
+		*  	A new WordThread
+		*	@param word WordRecord
+		*	@param c controller
 		*/ 
 		WordThread(WordRecord word,Controller c){
 			this.word = word;
@@ -271,7 +311,7 @@ public class Controller {
 		}
 
 		/**
-		*  	Creates and starts the threads of words 
+		*  	Resets the position of the word
 		*/ 
 		public void reset(){
 			word.resetPos();
@@ -279,58 +319,46 @@ public class Controller {
 		}
 
 		/**
-		*  	Creates and starts the threads of words 
+		*  	resets the position of the word and sets destroyed to true
 		*/ 
 		public void terminate(){
+			word.resetPos();
 			destroyed = true;
+			c.resetState(true);
 		}
 
 		/**
-		*  	Creates and starts the threads of words 
+		*  	Runs the thread if the thread is not destroyed or the game is not over.
 		*/ 
 		public void run(){
 
 			while (!c.gameEnded() && !destroyed){//if the game is not over	
-
-
-
+					int count = c.threadCount.get();
 					if(c.gamePaused())
 						continue;// if the game was paused, do nothing
-
-					else if (word.caught()){
-						
-						if (c.wordCount.get()>=0){								
-							//System.out.println("caught: "+word.getWord());
+					else if (word.caught()){							
+							System.out.println("c:"+count);
 							word.resetWord();	
-						}
-						else{
-							//System.out.println("caught: "+word.caught());
-							//System.out.println("crunning: "+this.isAlive());
-							destroyed = true;
-							word.resetWord();						
-							c.endThread(this);
-						}
+							//c.countThreads(); // if a new word is added increase
 					}
 
 					else if(word.dropped()){ //there is a change to the game
 						c.missed();
-						if (c.wordCount.get()>=0){	
-							System.out.println("dropped: "+word.getWord());
-							word.resetWord();
-						}
+						System.out.println("d:"+count);
+						word.resetWord();
+						//c.countThreads();	
+					}
 
-						else{
-							System.out.println("dropped: "+word.dropped());
-							System.out.println("drunning: "+this.isAlive());
-							destroyed = true;
-							word.resetWord();						
-							c.endThread(this);
-						}					
+					else if (count>=c.totalWords && !word.caught() && !word.dropped()){
+						System.out.println("dc:"+count);
+						destroyed = true;
+						this.reset();						
+						c.endThread(this);
 					}
 
 					else{
 						word.drop(1); //drop the word by 1
-						c.resetState();//let the contoller know there is a modification
+						c.resetState(true);//let the contoller know there is a modification
 					}			
 				try{
 					Thread.sleep(word.getSpeed()/20);//it will drop the word at the rate 

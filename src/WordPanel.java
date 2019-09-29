@@ -15,6 +15,7 @@ public class WordPanel extends JPanel implements Runnable {
 		private int noWords;
 		private int maxY;
 		private Controller c;
+		private boolean over = false;
 	
 		WordPanel(WordRecord[] words, int maxY, Controller c) {
 			this.words=words; //will this work? lol no
@@ -50,12 +51,12 @@ public class WordPanel extends JPanel implements Runnable {
    
 		
 		public void run() {
-			while (!c.gameEnded()){//if the game is not over				
+			while (!over){//if the game is not over				
 				if(paused)
 					continue;// if the game was paused, do nothing
 				else if(c.isChanged()){ //there is a change to the game
 					repaint();//refreshh the panel
-					c.resetState();//let the contoller know the change has been made
+					c.resetState(false);//let the contoller know the change has been made
 				}	
 			}			
 			try{
@@ -67,7 +68,7 @@ public class WordPanel extends JPanel implements Runnable {
 		}
 
 		public void reset(){
-			repaint();
+			over = true;
 		}
 	}
 
