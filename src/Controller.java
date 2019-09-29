@@ -69,11 +69,11 @@ public class Controller {
 	uncomment the block below to see how many words are dropping
 	*/
 
-	// public synchronized void countThreads(){
-	// 		threadCount.incrementAndGet();
-	// 		System.out.print(": "+ threadCount);
-	// 		System.out.println(": "+ wordCount);
-	// }
+	public synchronized void countThreads(){
+			threadCount.incrementAndGet();
+			// System.out.print(": "+ threadCount);
+			// System.out.println(": "+ wordCount);
+	}
 
 	/**
 	*  	Starts the game.
@@ -83,6 +83,7 @@ public class Controller {
 		running = true;
 		wordCount.set(totalWords-noWords);
 		threadCount.set(0);
+		score.resetScore();
 		updateScores();
 		dropWords();
 		
@@ -337,23 +338,36 @@ public class Controller {
 					if(c.gamePaused())
 						continue;// if the game was paused, do nothing
 					else if (word.caught()){							
-							System.out.println("c:"+count);
+							//System.out.println("c:"+count);
+
+						if (((totalWords) - count <= c.noWords)){//if the word count has been reached
+							//System.out.println("dc:"+count);
+							destroyed = true;
+							this.reset();						
+							c.endThread(this);
+						}
+						else{
 							word.resetWord();	
-							//c.countThreads(); // if a new word is added increase
+							c.countThreads(); // if a new word is added increase
+						}
 					}
 
 					else if(word.dropped()){ //there is a change to the game
-						c.missed();
-						System.out.println("d:"+count);
-						word.resetWord();
-						//c.countThreads();	
-					}
+						
+						//System.out.println("d:"+count);
+						if (((totalWords) - count <= c.noWords)){
+							//System.out.println("dc:"+count);
+							destroyed = true;
+							this.reset();
+							c.missed();						
+							c.endThread(this);
+						}
 
-					else if (count>=c.totalWords && !word.caught() && !word.dropped()){
-						System.out.println("dc:"+count);
-						destroyed = true;
-						this.reset();						
-						c.endThread(this);
+						else{
+							c.missed();
+							word.resetWord();
+							c.countThreads();
+						}
 					}
 
 					else{
