@@ -65,7 +65,9 @@ public class WordApp {
 	    {
 			public void actionPerformed(ActionEvent evt) {
 				String text = textEntry.getText();
-				controller.checkAnswer(text);			
+
+				if(controller.gameRunning() && !controller.gamePaused())
+					controller.checkAnswer(text);			
 
 				textEntry.setText("");
 				textEntry.requestFocus();
@@ -86,9 +88,8 @@ public class WordApp {
 		    	public void actionPerformed(ActionEvent e)
 		      	{
 
-		    		if (startB.getText().equals("restart")&& controller.gameEnded()){
+		    		if (startB.getText().equals("restart") && controller.gameEnded()){
 		    			controller.resetGame();
-		    			startB.setText("Start");
 		    		} 
 		    		else if(startB.getText().equals("restart")&& controller.gameRunning()){
 		    			controller.resetGame();
@@ -110,12 +111,12 @@ public class WordApp {
 		      public void actionPerformed(ActionEvent e)
 		      {
 
-	    		if (pauseB.getText().equals("Pause")){
+	    		if (pauseB.getText().equals("Pause") && controller.gameRunning()){
 	    			controller.pauseGame();
 	    			pauseB.setText("continue");
 	    		}  
 	    	  		
-	    	  	else {
+	    	  	else if (controller.gameRunning()) {
 	    	  		controller.continueGame();
 	    	  		pauseB.setText("Pause");
 	    			textEntry.requestFocus();
@@ -131,10 +132,7 @@ public class WordApp {
 				public void actionPerformed(ActionEvent e)
 				{
 					controller.endGame();
-										
-					if (startB.getText().equals("restart"))
-						startB.setText("Start");
-					
+													
 				}
 
 		    });
@@ -145,7 +143,6 @@ public class WordApp {
 		    {
 				public void actionPerformed(ActionEvent e)
 				{
-					controller.endGame();
 					System.exit(0);
 				}
 

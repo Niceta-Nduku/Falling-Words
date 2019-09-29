@@ -22,7 +22,7 @@ default: classes
 classes: $(CLASSES:${SRCDIR}/%.java=${BINDIR}/%.class)
 
 run:
-	cd bin && java WordApp "5" "3" "" && cd ..
+	cd bin && java WordApp "25" "6" "../../example_dict.txt" && cd ..
 
 clean:
 	rm -f ${BINDIR}/*.class
